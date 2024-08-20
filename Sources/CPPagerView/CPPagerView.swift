@@ -5,15 +5,12 @@ import SwiftUI
 
 @available(iOS 14.0, *)
 struct ContentView: View {
-    
     var body: some View {
         Home(offset: 0, currentTab: 0, tabs: [
-            .init(tabName: "Iceland", sampleImage: "house"),
-            .init(tabName: "What about you", sampleImage: "person.fill"),
-            .init(tabName: "Brazil", sampleImage: "gear"),
-            .init(tabName: "Iceland", sampleImage: "house"),
-            .init(tabName: "What about you", sampleImage: "person.fill"),
-            .init(tabName: "Brazil", sampleImage: "gear")
+            .init(tabName: "Iceland", titleImage: nil, contentView: AnyView(ContentView1())),
+            .init(tabName: "What about you", titleImage: Image(systemName: "person.fill"), contentView: AnyView(Text("Iceland Content"))),
+            .init(tabName: "Brazil", titleImage: Image(systemName: "gear"), contentView: AnyView(Text("Iceland Content"))),
+            .init(tabName: "England", titleImage: Image(systemName: "house.fill"), contentView: AnyView(Text("Iceland Content"))),
         ])
     }
 }

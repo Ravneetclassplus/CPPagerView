@@ -9,11 +9,7 @@ import SwiftUI
 @available(iOS 14.0, *)
 struct ContentView1: View {
     var body: some View {
-        VStack {
-            Image(systemName: "globe")
-            Text("Hello World")
-        }
-        
+        Text("hello")
     }
 }
 
@@ -25,6 +21,10 @@ public struct Home: View {
     @State private var progress: CGFloat = 0
     @State private var isTapped: Bool = false
     @State private var scrollPosition: String = .init()
+    @State private var selectedColor: Color = .primary
+    @State private var unselectedColor: Color = .gray
+    @State private var indicatorHeight: CGFloat = 2
+    @State private var indicatorColor: Color = .primary
     
     //Mark: - Gesture Manager
     @StateObject private var gestureManager: InteractionManager = .init()
@@ -42,10 +42,10 @@ public struct Home: View {
                 let screenSize = proxy.size
                 ZStack(alignment: .top) {
                     TabView(selection: $currentTab) {
+                        if tabs.count > 1 {
                             ForEach(0..<tabs.endIndex, id: \.self) { index in
-                                if index > -1 {
                                     GeometryReader { proxy in
-                                        ContentView1()
+                                        tabs[index].contentView
                                             .position(x: proxy.frame(in: .local).midX, y: proxy.frame(in: .local).midY)
                                     }
                                     .ignoresSafeArea()
@@ -66,7 +66,7 @@ public struct Home: View {
                                         }
                                     }
                                     .tag(index)
-                                }
+                            }
                         }
                     }
                     .ignoresSafeArea()
@@ -91,25 +91,29 @@ public struct Home: View {
             ScrollViewReader { scrollProxy in
                 ZStack {
                     HStack(spacing: 30) {
-                        ForEach($tabs) { $tab in
-                            HStack {
-                                Image(systemName: "gear")
-                                Text(tab.tabName)
-                                    .font(.system(size: 20))
-                                    .foregroundColor(.black)
-                                    .frame(maxWidth: .infinity)
-                                    .onTapGesture {
-                                        isTapped = true
-                                        withAnimation(.easeInOut) {
-                                            currentTab = indexOf(tab: tab)
-                                            offset = (size.width) * CGFloat(indexOf(tab: tab))
-                                            progress = offset / size.width
+                        if tabs.count > 1 {
+                            ForEach($tabs) { $tab in
+                                HStack {
+                                    tab.titleImage
+                                    Text(tab.tabName)
+                                        .font(.system(size: 20))
+                                        .frame(maxWidth: .infinity)
+                                        .onTapGesture {
+                                            isTapped = true
+                                            withAnimation(.easeInOut) {
+                                                currentTab = indexOf(tab: tab)
+                                                offset = (size.width) * CGFloat(indexOf(tab: tab))
+                                                progress = offset / size.width
+                                            }
                                         }
-                                    }
-                            }
-                            .offsetX { rect in
-                                tab.size = rect.size
-                                tab.minX = rect.minX
+                                }
+                                .foregroundColor(
+                                    currentTab == indexOf(tab: tab) ? selectedColor : unselectedColor
+                                )
+                                .offsetX { rect in
+                                    tab.size = rect.size
+                                    tab.minX = rect.minX
+                                }
                             }
                         }
                     }
@@ -134,8 +138,8 @@ public struct Home: View {
                 let indicatorWidth = progress.interpolate(inputRange: inputRange, outputRange: outputRange)
                 let indicatorPosition = progress.interpolate(inputRange: inputRange, outputRange: outputPositionRange)
                 Capsule()
-                    .fill()
-                    .frame(width: indicatorWidth, height: 2)
+                    .fill(indicatorColor)
+                    .frame(width: indicatorWidth, height: indicatorHeight)
                     .offset(x: indicatorPosition - 15, y: 14)
             }
             ,alignment: .bottomLeading
@@ -157,40 +161,25 @@ public struct Home: View {
     ContentView()
 }
 
-//MARK: - Universal Interaction Manager
 @available(iOS 14.0, *)
-class InteractionManager: NSObject, ObservableObject, UIGestureRecognizerDelegate {
-    @Published var isInteracting: Bool = false
-    @Published var isGestureAdded: Bool = false
-    
-    func addGesture() {
-        if !isGestureAdded {
-            let gesture = UIPanGestureRecognizer(target: self, action: #selector(onChange(gesture: )))
-            gesture.name = "UNIVERSAL"
-            gesture.delegate = self
-            guard let windowScene = UIApplication.shared.connectedScenes.first as? UIWindowScene else { return }
-            guard let window = windowScene.windows.last?.rootViewController else { return }
-            window.view.addGestureRecognizer(gesture)
-            isGestureAdded = true
-        }
+extension Home {
+    public func setTitleColors(selected: Color, unselected: Color) -> Home {
+        var copy = self
+        copy._selectedColor = State(initialValue: selected)
+        copy._unselectedColor = State(initialValue: unselected)
+        return copy
     }
     
-    func removeGesture() {
-        guard let windowScene = UIApplication.shared.connectedScenes.first as? UIWindowScene else { return }
-        guard let window = windowScene.windows.last?.rootViewController else { return }
-        
-        window.view.gestureRecognizers?.removeAll(where: { gesture in
-            return gesture.name == "UNIVERSAL"
-        })
-        isGestureAdded = false
-    }
-     
-    @objc
-    func onChange(gesture: UIPanGestureRecognizer) {
-        isInteracting = (gesture.state == .changed)
+    public func setIndicatorHeight(to height: CGFloat) -> Home {
+        var copy = self
+        copy._indicatorHeight = State(initialValue: height)
+        return copy
     }
     
-    func gestureRecognizer(_ gestureRecognizer: UIGestureRecognizer, shouldRecognizeSimultaneouslyWith otherGestureRecognizer: UIGestureRecognizer) -> Bool {
-         return true
+    public func setIndicatorColor(to color: Color) -> Home {
+        var copy = self
+        copy._indicatorColor = State(initialValue: color)
+        return copy
     }
 }
+
