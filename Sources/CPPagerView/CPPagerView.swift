@@ -7,10 +7,25 @@ import SwiftUI
 struct ContentView: View {
     var body: some View {
         Home(currentTab: 0, tabs: [
-            .init(tabName: "Iceland", titleImage: nil, contentView: AnyView(ContentView1())),
-            .init(tabName: "What about you", titleImage: Image(systemName: "person.fill"), contentView: AnyView(Text("Iceland Content"))),
-            .init(tabName: "Brazil", titleImage: Image(systemName: "gear"), contentView: AnyView(Text("Iceland Content"))),
-            .init(tabName: "England", titleImage: nil, contentView: AnyView(Text("Iceland Content"))),
+            .init(titleView: AnyView(HStack
+                                     {
+                                         Text("Iceland")
+                                             .font(.system(size: 20))
+                                     })
+                  , contentView: AnyView(Text("Iceland Content"))),
+            .init(titleView: AnyView(HStack
+                                     {
+                                         Text("What About You")
+                                             .font(.system(size: 20))
+                                         Image(systemName: "person.fill")
+                                     }),
+                  contentView: AnyView(Text("What about you Content"))),
+            .init(titleView: AnyView(HStack
+                                     {
+                                         Image(systemName: "gear")
+                                             .font(.system(size: 20))
+                                     }),
+                  contentView: AnyView(Text("Brazil Content")))
         ])
     }
 }

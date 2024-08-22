@@ -10,24 +10,20 @@ import SwiftUI
 @available(iOS 14.0, *)
 public struct Tab: Identifiable, Equatable {
     public var id: String = UUID().uuidString
-    public var tabName: String
-    public var titleImage: Image?
+    public var titleView: AnyView?
     public var contentView: AnyView
     
     var size: CGSize = .zero
     var minX: CGFloat = .zero
     
-    public init(tabName: String, titleImage: Image? = nil, contentView: AnyView) {
-        self.tabName = tabName
-        self.titleImage = titleImage
+    public init(titleView: AnyView? = nil, contentView: AnyView) {
+        self.titleView = titleView
         self.contentView = contentView
     }
     
     // Implement Equatable manually, excluding AnyView from the comparison
     public static func == (lhs: Tab, rhs: Tab) -> Bool {
         return lhs.id == rhs.id &&
-               lhs.tabName == rhs.tabName &&
-               lhs.titleImage == rhs.titleImage &&
                lhs.size == rhs.size &&
                lhs.minX == rhs.minX
     }
@@ -35,7 +31,23 @@ public struct Tab: Identifiable, Equatable {
 
 @available(iOS 14.0, *)
 var sampleTabs: [Tab] = [
-    .init(tabName: "Iceland", titleImage: nil, contentView: AnyView(Text("Iceland Content"))),
-    .init(tabName: "What about you", titleImage: Image(systemName: "person.fill"), contentView: AnyView(Text("What about you Content"))),
-    .init(tabName: "Brazil", titleImage: Image(systemName: "gear"), contentView: AnyView(Text("Brazil Content")))
+    .init(titleView: AnyView(HStack
+                             {
+                                 Text("Iceland")
+                                     .font(.system(size: 20))
+                             })
+          , contentView: AnyView(Text("Iceland Content"))),
+    .init(titleView: AnyView(HStack
+                             {
+                                 Text("Iceland")
+                                     .font(.system(size: 20))
+                                 Image(systemName: "person.fill")
+                             }),
+          contentView: AnyView(Text("What about you Content"))),
+    .init(titleView: AnyView(HStack
+                             { 
+                                 Image(systemName: "gear")
+                                     .font(.system(size: 20))
+                             }),
+          contentView: AnyView(Text("Brazil Content")))
 ]
