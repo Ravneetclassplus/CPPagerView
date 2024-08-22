@@ -16,7 +16,7 @@ struct ContentView1: View {
 @available(iOS 14.0, *)
 public struct Home: View {
     @State private var offset: CGFloat = 0
-    @State private var currentTab: Int = 0
+    @State private var currentTab: Int
     @State private var tabs: [Tab]
     @State private var progress: CGFloat = 0
     @State private var isTapped: Bool = false
@@ -25,24 +25,27 @@ public struct Home: View {
     @State private var unselectedColor: Color = .gray
     @State private var indicatorHeight: CGFloat = 2
     @State private var indicatorColor: Color = .primary
+    @State private var shouldHideTitleBar: Bool = false
+    @State private var titleFont: Font = .system(size: 20)
     
     //Mark: - Gesture Manager
     @StateObject private var gestureManager: InteractionManager = .init()
     
-    public init(offset: CGFloat, currentTab: Int, tabs: [Tab]) {
-        self.offset = offset
+    public init(currentTab: Int = 0, tabs: [Tab]) {
         self.currentTab = currentTab
         self.tabs = tabs
     }
     
     public var body: some View {
         VStack {
-            customTabBar(size: UIScreen.main.bounds)
+            if !shouldHideTitleBar, !tabs.isEmpty {
+                customTabBar(size: UIScreen.main.bounds)
+            }
             GeometryReader { proxy in
                 let screenSize = proxy.size
                 ZStack(alignment: .top) {
                     TabView(selection: $currentTab) {
-                        if tabs.count > 1 {
+                        if !tabs.isEmpty {
                             ForEach(0..<tabs.endIndex, id: \.self) { index in
                                     GeometryReader { proxy in
                                         tabs[index].contentView
@@ -91,29 +94,27 @@ public struct Home: View {
             ScrollViewReader { scrollProxy in
                 ZStack {
                     HStack(spacing: 30) {
-                        if tabs.count > 1 {
-                            ForEach($tabs) { $tab in
-                                HStack {
-                                    tab.titleImage
-                                    Text(tab.tabName)
-                                        .font(.system(size: 20))
-                                        .frame(maxWidth: .infinity)
-                                        .onTapGesture {
-                                            isTapped = true
-                                            withAnimation(.easeInOut) {
-                                                currentTab = indexOf(tab: tab)
-                                                offset = (size.width) * CGFloat(indexOf(tab: tab))
-                                                progress = offset / size.width
-                                            }
+                        ForEach($tabs) { $tab in
+                            HStack {
+                                tab.titleImage
+                                Text(tab.tabName)
+                                    .font(titleFont)
+                                    .frame(maxWidth: .infinity)
+                                    .onTapGesture {
+                                        isTapped = true
+                                        withAnimation(.easeInOut) {
+                                            currentTab = indexOf(tab: tab)
+                                            offset = (size.width) * CGFloat(indexOf(tab: tab))
+                                            progress = offset / size.width
                                         }
-                                }
-                                .foregroundColor(
-                                    currentTab == indexOf(tab: tab) ? selectedColor : unselectedColor
-                                )
-                                .offsetX { rect in
-                                    tab.size = rect.size
-                                    tab.minX = rect.minX
-                                }
+                                    }
+                            }
+                            .foregroundColor(
+                                currentTab == indexOf(tab: tab) ? selectedColor : unselectedColor
+                            )
+                            .offsetX { rect in
+                                tab.size = rect.size
+                                tab.minX = rect.minX
                             }
                         }
                     }
@@ -181,5 +182,10 @@ extension Home {
         copy._indicatorColor = State(initialValue: color)
         return copy
     }
+    
+    public func shouldHideTitleBar(isHidden: Bool) -> Home {
+        var copy = self
+        copy._shouldHideTitleBar = State(initialValue: isHidden)
+        return copy
+    }
 }
-
