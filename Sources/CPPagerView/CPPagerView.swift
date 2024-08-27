@@ -25,7 +25,7 @@ struct ContentView: View {
                                          Image(systemName: "gear")
                                              .font(.system(size: 20))
                                      }),
-                  contentView: AnyView(Text("Brazil Content")))
+                  contentView: AnyView(Text("Brazil Content"))),
         ])
     }
 }

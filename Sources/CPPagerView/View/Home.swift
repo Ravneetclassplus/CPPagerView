@@ -10,7 +10,7 @@ import SwiftUI
 public struct Home: View {
     @State private var offset: CGFloat = 0
     @State private var currentTab: Int
-    @State private var tabs: [Tab]
+    @State private var tabs: [PagerTab]
     @State private var progress: CGFloat = 0
     @State private var isTapped: Bool = false
     @State private var scrollPosition: String = .init()
@@ -19,11 +19,14 @@ public struct Home: View {
     @State private var indicatorHeight: CGFloat = 2
     @State private var indicatorColor: Color = .primary
     @State private var shouldHideTitleBar: Bool = false
+    @State private var isTabScrollEnabled: Bool = true
+    @State private var interTabSpacing: CGFloat = 0
+    @State private var tabBarHeight: CGFloat = 30
     
     //Mark: - Gesture Manager
     @StateObject private var gestureManager: InteractionManager = .init()
     
-    public init(currentTab: Int = 0, tabs: [Tab]) {
+    public init(currentTab: Int = 0, tabs: [PagerTab]) {
         self.currentTab = currentTab
         self.tabs = tabs
     }
@@ -61,10 +64,8 @@ public struct Home: View {
     func customTabBar(size: CGRect) -> some View {
         ScrollView(.horizontal, showsIndicators: false) {
             ScrollViewReader { scrollProxy in
-                ZStack {
-                    HStack(spacing: 30) {
-                        setupTitleView(size: size)
-                    }
+                HStack(spacing: interTabSpacing) {
+                    setupTitleView(size: size)
                 }
                 .onChange(of: scrollPosition) { newPosition in
                     withAnimation(.easeInOut) {
@@ -73,28 +74,33 @@ public struct Home: View {
                 }
             }
         }
-        .frame(maxWidth: .infinity, alignment: .leading)
+        .frame(maxWidth: .infinity, maxHeight: tabBarHeight, alignment: .leading)
         .overlay(
             setupTitleBottomView()
             ,alignment: .bottomLeading
         )
-        .padding(15)
+        .padding(.vertical, 15) // Padding for vertical edges
+        .padding(.horizontal, isTabScrollEnabled ? 15 : 0) //Padding for horizontal edges
     }
     
     func setupTitleView(size: CGRect) -> some View {
         ForEach($tabs) { $tab in
+            let tabIndex = indexOf(tab: tab)
+            let relativeProgress = progress - CGFloat(tabIndex)
+            
+            let interpolatedColor = selectedColor.interpolateColor(to: unselectedColor, progress: abs(relativeProgress))
             tab.titleView
-                .frame(maxWidth: .infinity)
+                .frame(width: isTabScrollEnabled ? nil : UIScreen.main.bounds.width / CGFloat(tabs.count))
                 .onTapGesture {
                     isTapped = true
                     withAnimation(.easeInOut) {
-                        currentTab = indexOf(tab: tab)
-                        offset = (size.width) * CGFloat(indexOf(tab: tab))
+                        currentTab = tabIndex
+                        offset = (size.width) * CGFloat(tabIndex)
                         progress = offset / size.width
                     }
                 }
                 .foregroundColor(
-                    currentTab == indexOf(tab: tab) ? selectedColor : unselectedColor
+                    abs(relativeProgress) < 1.0 ? interpolatedColor : unselectedColor
                 )
                 .offsetX { rect in
                     tab.size = rect.size
@@ -105,10 +111,6 @@ public struct Home: View {
     
     private func setupTitleBottomView() -> some View {
         ZStack(alignment: .leading) {
-            Capsule()
-                .fill(.gray)
-                .frame(height: 1)
-                .offset(y: 14)
             let inputRange = tabs.indices.compactMap { return CGFloat($0) }
             let outputRange = tabs.compactMap { return $0.size.width }
             let outputPositionRange = tabs.compactMap { return $0.minX }
@@ -117,7 +119,7 @@ public struct Home: View {
             Capsule()
                 .fill(indicatorColor)
                 .frame(width: indicatorWidth, height: indicatorHeight)
-                .offset(x: indicatorPosition - 15, y: 14)
+                .offset(x: indicatorPosition - (isTabScrollEnabled ? 15 : 0), y: 14)
         }
     }
     
@@ -148,7 +150,7 @@ public struct Home: View {
         }
     }
     
-    func indexOf(tab: Tab) -> Int {
+    func indexOf(tab: PagerTab) -> Int {
         let index = tabs.firstIndex { CTab in
             CTab == tab
         } ?? 0
@@ -186,6 +188,24 @@ extension Home {
     public func shouldHideTitleBar(isHidden: Bool) -> Home {
         var copy = self
         copy._shouldHideTitleBar = State(initialValue: isHidden)
+        return copy
+    }
+    
+    public func setInterTabSpacing(spacing: CGFloat) -> Home {
+        var copy = self
+        copy._interTabSpacing = State(initialValue: spacing)
+        return copy
+    }
+    
+    public func isTabScrollEnabled(isEnabled: Bool) -> Home {
+        var copy = self
+        copy._isTabScrollEnabled = State(initialValue: isEnabled)
+        return copy
+    }
+    
+    public func setTabBarHeight(height: CGFloat) -> Home {
+        var copy = self
+        copy._tabBarHeight = State(initialValue: height)
         return copy
     }
 }
