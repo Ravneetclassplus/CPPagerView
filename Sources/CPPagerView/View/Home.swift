@@ -79,7 +79,8 @@ public struct Home: View {
             setupTitleBottomView()
             ,alignment: .bottomLeading
         )
-        .padding(.vertical, 15) // Padding for vertical edges
+        .padding(.top, 15) // Padding for vertical edges
+        .padding(.bottom, 7)
         .padding(.horizontal, isTabScrollEnabled ? 15 : 0) //Padding for horizontal edges
     }
     

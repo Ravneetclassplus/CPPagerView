@@ -24,6 +24,7 @@ extension View {
 
 struct RectKey: PreferenceKey {
     static var defaultValue: CGRect = .zero
+    @available(iOS 13.0, *)
     static func reduce(value: inout Value, nextValue: () -> Value) {
         value = nextValue()
     }
